@@ -43,3 +43,15 @@ def speed_profile(path_xy, dist_from_wall, cfg=None):
             v[i] = v[i+1] + dv
 
     return v
+
+
+def resample_time(path_xy, v_node, dt):
+    # convert from spatial samples to time samples at uniform dt
+    eps = DEFAULT_CONFIG.eps
+    ds = np.hypot(np.diff(path_xy[:, 0]), np.diff(path_xy[:, 1])) + eps
+    v_avg = 0.5 * (v_node[:-1] + v_node[1:])
+    t_cum = np.concatenate(([0.0], np.cumsum(ds / v_avg)))
+    t_new = np.arange(0.0, t_cum[-1] + 1e-9, dt)
+    x = np.interp(t_new, t_cum, path_xy[:, 0])
+    y = np.interp(t_new, t_cum, path_xy[:, 1])
+    return np.column_stack([x, y]), t_cum[-1]
