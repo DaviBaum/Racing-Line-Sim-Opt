@@ -47,4 +47,25 @@ class FMMSolver:
             p -= h * (k1 + 2*k2 + 2*k3 + k4) / 6
             trace.append(p[::-1])
 
-        return np.asarray(trace)[::-1] / ss
+        return self._relax(np.asarray(trace)[::-1])
+
+    def _relax(self, path):
+        # the raw fmm path is kinda crunchy so we smooth it out
+        # treat it like a rubber band with beads on it
+        ss = self.cfg.supersample
+        nb = self.cfg.string_beads
+        t_in = np.linspace(0, 1, len(path))
+        t_out = np.linspace(0, 1, nb)
+        pts = np.column_stack([
+            np.interp(t_out, t_in, path[:, 0]),
+            np.interp(t_out, t_in, path[:, 1]),
+        ])
+
+        for _ in range(self.cfg.string_iters):
+            segs = np.diff(pts, axis=0)
+            lens = np.linalg.norm(segs, axis=1) + self.cfg.eps
+            force = np.zeros_like(pts)
+            force[1:-1] = segs[1:]/lens[1:, None] - segs[:-1]/lens[:-1, None]
+            pts[1:-1] -= 0.25 * force[1:-1]
+
+        return pts / ss
