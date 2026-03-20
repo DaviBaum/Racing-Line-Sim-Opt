@@ -17,9 +17,20 @@ class FMMSolver:
         self.Ty, self.Tx = np.gradient(self.T)
 
     def _grad_at(self, p):
-        iy = min(max(int(p[0]), 0), self.T.shape[0] - 2)
-        ix = min(max(int(p[1]), 0), self.T.shape[1] - 2)
-        return np.array([self.Ty[iy, ix], self.Tx[iy, ix]])
+        # rk4 lands between pixels so we gotta interpolate the gradient
+        y, x = p
+        iy = min(max(int(y), 0), self.T.shape[0] - 2)
+        ix = min(max(int(x), 0), self.T.shape[1] - 2)
+        dy, dx = y - iy, x - ix
+
+        # lerp the corners
+        g00 = np.array([self.Ty[iy, ix],     self.Tx[iy, ix]])
+        g10 = np.array([self.Ty[iy+1, ix],   self.Tx[iy+1, ix]])
+        g01 = np.array([self.Ty[iy, ix+1],   self.Tx[iy, ix+1]])
+        g11 = np.array([self.Ty[iy+1, ix+1], self.Tx[iy+1, ix+1]])
+        top = g00 * (1 - dy) + g10 * dy
+        bot = g01 * (1 - dy) + g11 * dy
+        return top * (1 - dx) + bot * dx
 
     def compute_optimal_path(self, start_xy, goal_xy, max_iters=25000):
         ss = self.cfg.supersample
@@ -36,6 +47,7 @@ class FMMSolver:
                 break
 
             # rk4 bc euler was way too sloppy on tight corners
+            # normalize each k so we always step the same distance
             k1 = self._grad_at(p)
             k1 /= np.linalg.norm(k1) + eps
             k2 = self._grad_at(p - .5*h*k1)
@@ -51,7 +63,6 @@ class FMMSolver:
 
     def _relax(self, path):
         # the raw fmm path is kinda crunchy so we smooth it out
-        # treat it like a rubber band with beads on it
         ss = self.cfg.supersample
         nb = self.cfg.string_beads
         t_in = np.linspace(0, 1, len(path))
