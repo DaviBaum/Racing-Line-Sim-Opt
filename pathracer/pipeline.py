@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image
+import matplotlib.pyplot as plt
 
 from .config import DEFAULT_CONFIG
 from .centerline import ordered_centerline
@@ -16,6 +17,7 @@ def run_race(road_path, stroke_paths, cfg=None, compute_optimal=True,
     road_rgba = np.asarray(Image.open(road_path).convert("RGBA"))
     driveable = road_rgba[..., 3] == 0
 
+    # pull centerlines out of the strokes
     paths_raw = {}
     for name, png in stroke_paths.items():
         paths_raw[name] = ordered_centerline(png, cfg.smooth_win, cfg.smooth_poly)[::-1]
@@ -28,7 +30,7 @@ def run_race(road_path, stroke_paths, cfg=None, compute_optimal=True,
         paths_raw["cyan"] = solver.compute_optimal_path(
             starts.mean(axis=0), goals.mean(axis=0))
 
-    # dummy dist for now - just ones everywhere
+    # dummy dist for now
     dist = np.ones(road_rgba.shape[:2], dtype=float)
 
     paths_timed = {}
@@ -39,8 +41,15 @@ def run_race(road_path, stroke_paths, cfg=None, compute_optimal=True,
 
     n_frames = int(max(total_times.values()) / cfg.dt) + 1
 
+    # put cyan last so hand drawn ones show on top
+    order = [k for k in paths_raw if k != "cyan"]
+    if "cyan" in paths_raw:
+        order.append("cyan")
+
     ani = create_race_animation(
-        road_rgba, paths_raw, paths_timed,
+        road_rgba,
+        {k: paths_raw[k] for k in order},
+        {k: paths_timed[k] for k in order},
         n_frames, cfg, output_path,
     )
 
