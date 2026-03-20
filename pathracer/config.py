@@ -13,6 +13,7 @@ class SimConfig:
     smooth_win: int = 11         # must be odd (savgol)
     smooth_poly: int = 3
     eps: float = 1e-6
+    # TODO: jerk stuff, string beads params
 
 
 DEFAULT_CONFIG = SimConfig()
