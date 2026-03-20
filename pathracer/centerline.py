@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image
+from scipy.signal import savgol_filter
 from scipy.ndimage import convolve
 from scipy.spatial.distance import cdist
 from skimage.morphology import skeletonize
@@ -19,6 +20,9 @@ def _find_endpoints(skel):
 
 
 def ordered_centerline(png_path, smooth_win=None, smooth_poly=None):
+    smooth_win = smooth_win or DEFAULT_CONFIG.smooth_win
+    smooth_poly = smooth_poly or DEFAULT_CONFIG.smooth_poly
+
     rgba = np.asarray(Image.open(png_path).convert("RGBA"))
     mask = rgba[..., 3] > 0  # non transparent = stroke
 
@@ -44,5 +48,10 @@ def ordered_centerline(png_path, smooth_win=None, smooth_poly=None):
                                       fully_connected=True, geometric=True)
     pts = np.array(path_idx, dtype=float)
     pts = pts[:, ::-1]  # flip to x y
+
+    # smooth out the jagginess from the skeleton pixels
+    if len(pts) >= smooth_win:
+        pts[:, 0] = savgol_filter(pts[:, 0], smooth_win, smooth_poly)
+        pts[:, 1] = savgol_filter(pts[:, 1], smooth_win, smooth_poly)
 
     return pts
