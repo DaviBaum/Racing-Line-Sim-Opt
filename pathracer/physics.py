@@ -31,10 +31,15 @@ def speed_profile(path_xy, dist_from_wall, cfg=None):
     ds = np.hypot(np.diff(path_xy[:, 0]), np.diff(path_xy[:, 1])) + eps
 
     # forward pass caps how fast you can speed up
-    # basically v^2 = v0^2 + 2*a*ds but simplified
     for i in range(1, len(v)):
         dv = cfg.a_max * ds[i-1] / v[i-1]
         if v[i] > v[i-1] + dv:
             v[i] = v[i-1] + dv
+
+    # same thing backwards so you slow down in time for corners
+    for i in range(len(v) - 2, -1, -1):
+        dv = cfg.a_max * ds[i] / v[i+1]
+        if v[i] > v[i+1] + dv:
+            v[i] = v[i+1] + dv
 
     return v
