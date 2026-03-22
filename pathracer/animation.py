@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
+import matplotlib.patheffects as pe
 from matplotlib.collections import LineCollection
 
 from .config import DEFAULT_CONFIG
@@ -33,10 +34,13 @@ def create_race_animation(road_rgba, paths_raw, paths_timed, dist_map,
             LineCollection(segs, array=vnorm[:-1], cmap=cmap, linewidth=3, zorder=1)
         )
 
+    # need the outline or you cant see them on the dark bg
+    outline = [pe.withStroke(linewidth=4, foreground="white")]
     markers = {}
     for n, pts in paths_timed.items():
         markers[n] = ax.text(pts[0][0], pts[0][1], TRAIN, fontsize=28,
-                             ha="center", va="center", zorder=3)
+                             ha="center", va="center", zorder=3,
+                             path_effects=outline)
 
     def update(i):
         for n in markers:
@@ -49,5 +53,6 @@ def create_race_animation(road_rgba, paths_raw, paths_timed, dist_map,
     if output_path:
         print(f"Saving to {output_path}...")
         result.save(output_path, fps=cfg.fps, dpi=150)
+        # dpi 150 is a compromise 300 makes the files huge
 
     return result
