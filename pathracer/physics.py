@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.signal import savgol_filter
 
 from .config import DEFAULT_CONFIG
 
@@ -34,6 +35,7 @@ def speed_profile(path_xy, dist_from_wall, cfg=None):
     ds = np.hypot(np.diff(path_xy[:, 0]), np.diff(path_xy[:, 1])) + eps
 
     # forward pass caps how fast you can speed up
+    # basically v^2 = v0^2 + 2*a*ds but simplified
     for i in range(1, len(v)):
         dv = cfg.a_max * ds[i-1] / v[i-1]
         if v[i] > v[i-1] + dv:
@@ -45,11 +47,20 @@ def speed_profile(path_xy, dist_from_wall, cfg=None):
         if v[i] > v[i+1] + dv:
             v[i] = v[i+1] + dv
 
+    # savgol smoothing to keep the jerk from going nuts
+    # without this the speed profile has these nasty discontinuities
+    v_lim = np.minimum(v_wall, v_lat)
+    if len(v) >= cfg.j_window:
+        v = savgol_filter(v, cfg.j_window, 3, mode="interp")
+        v = np.minimum(v, v_lim)  # clamp back down after smoothing
+
     return v
 
 
 def resample_time(path_xy, v_node, dt):
     # convert from spatial samples to time samples at uniform dt
+    # average speed between consecutive nodes gives us time per segment
+    # then just interpolate x and y onto the new time grid
     eps = DEFAULT_CONFIG.eps
     ds = np.hypot(np.diff(path_xy[:, 0]), np.diff(path_xy[:, 1])) + eps
     v_avg = 0.5 * (v_node[:-1] + v_node[1:])

@@ -9,13 +9,14 @@ class SimConfig:
     curv_penalty: float = 0.40
     a_max: float = 300.0
     a_lat_max: float = 500.0
+    j_max: float = 1000.0
+    j_window: int = 11          # must be odd (savgol)
     supersample: int = 8
     string_iters: int = 1
     string_beads: int = 128
     smooth_win: int = 11         # must be odd (savgol)
     smooth_poly: int = 3
     eps: float = 1e-6
-    # TODO: jerk stuff
 
 
 DEFAULT_CONFIG = SimConfig()
