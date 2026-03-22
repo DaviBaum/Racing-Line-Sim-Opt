@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image
+from scipy.ndimage import distance_transform_edt
 import matplotlib.pyplot as plt
 
 from .config import DEFAULT_CONFIG
@@ -16,8 +17,9 @@ def run_race(road_path, stroke_paths, cfg=None, compute_optimal=True,
 
     road_rgba = np.asarray(Image.open(road_path).convert("RGBA"))
     driveable = road_rgba[..., 3] == 0
+    # how far each pixel is from a wall
+    dist = distance_transform_edt(driveable).astype(float)
 
-    # pull centerlines out of the strokes
     paths_raw = {}
     for name, png in stroke_paths.items():
         paths_raw[name] = ordered_centerline(png, cfg.smooth_win, cfg.smooth_poly)[::-1]
@@ -30,18 +32,17 @@ def run_race(road_path, stroke_paths, cfg=None, compute_optimal=True,
         paths_raw["cyan"] = solver.compute_optimal_path(
             starts.mean(axis=0), goals.mean(axis=0))
 
-    # dummy dist for now
-    dist = np.ones(road_rgba.shape[:2], dtype=float)
-
     paths_timed = {}
     total_times = {}
     for name, raw in paths_raw.items():
-        v = speed_profile(raw, dist[0] * np.ones(len(raw)), cfg)
+        iy = np.clip(raw[:, 1].astype(int), 0, dist.shape[0] - 1)
+        ix = np.clip(raw[:, 0].astype(int), 0, dist.shape[1] - 1)
+        d = dist[iy, ix]
+        v = speed_profile(raw, d, cfg)
         paths_timed[name], total_times[name] = resample_time(raw, v, cfg.dt)
 
     n_frames = int(max(total_times.values()) / cfg.dt) + 1
 
-    # put cyan last so hand drawn ones show on top
     order = [k for k in paths_raw if k != "cyan"]
     if "cyan" in paths_raw:
         order.append("cyan")
@@ -50,7 +51,7 @@ def run_race(road_path, stroke_paths, cfg=None, compute_optimal=True,
         road_rgba,
         {k: paths_raw[k] for k in order},
         {k: paths_timed[k] for k in order},
-        n_frames, cfg, output_path,
+        dist, n_frames, cfg, output_path,
     )
 
     if show:

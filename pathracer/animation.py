@@ -1,11 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
+from matplotlib.collections import LineCollection
 
 from .config import DEFAULT_CONFIG
+from .physics import speed_profile
 
 
-def create_race_animation(road_rgba, paths_raw, paths_timed,
+def create_race_animation(road_rgba, paths_raw, paths_timed, dist_map,
                           n_frames, cfg=None, output_path=None):
     if cfg is None:
         cfg = DEFAULT_CONFIG
@@ -17,13 +19,20 @@ def create_race_animation(road_rgba, paths_raw, paths_timed,
     ax.set_xticks([]); ax.set_yticks([])
     ax.imshow(road_rgba, zorder=0)
 
-    # just draw each path as a plain line for now
-    for name, raw in paths_raw.items():
-        ax.plot(raw[:, 0], raw[:, 1], linewidth=2, zorder=1)
+    cmap = plt.get_cmap("turbo")
+    for _, raw in paths_raw.items():
+        iy = np.clip(raw[:, 1].astype(int), 0, h - 1)
+        ix = np.clip(raw[:, 0].astype(int), 0, w - 1)
+        v = speed_profile(raw, dist_map[iy, ix], cfg)
+        vnorm = v / v.max()
+        segs = np.column_stack([raw[:-1], raw[1:]]).reshape(-1, 2, 2)
+        ax.add_collection(
+            LineCollection(segs, array=vnorm[:-1], cmap=cmap, linewidth=3, zorder=1)
+        )
 
     markers = {}
     for n, pts in paths_timed.items():
-        markers[n], = ax.plot(pts[0][0], pts[0][1], "o", markersize=10, zorder=3)
+        markers[n], = ax.plot(pts[0][0], pts[0][1], "o", markersize=12, zorder=3)
 
     def update(i):
         for n in markers:
