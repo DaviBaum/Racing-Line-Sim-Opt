@@ -20,12 +20,15 @@ def speed_profile(path_xy, dist_from_wall, cfg=None):
 
     kappa = np.abs(curvature(path_xy))
 
-    # tighter curves = slower
-    v = cfg.v_base / (1 + cfg.curv_penalty * kappa**2)
+    # closer to the wall = slower and tighter curves = slower
+    # this is the main thing that makes different paths have different times
+    v_wall = cfg.v_base / (1 + cfg.wall_penalty / (dist_from_wall + eps)
+                           + cfg.curv_penalty * kappa**2)
 
-    # lateral g limit
+    # you also cant go faster than what the lateral g limit allows
+    # v = sqrt(a_lat / kappa) basically centripetal acceleration
     v_lat = np.sqrt(np.maximum(0, cfg.a_lat_max / (kappa + eps)))
-    v = np.minimum(v, v_lat)
+    v = np.minimum(v_wall, v_lat)
 
     # segment lengths between consecutive points
     ds = np.hypot(np.diff(path_xy[:, 0]), np.diff(path_xy[:, 1])) + eps
