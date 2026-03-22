@@ -6,6 +6,8 @@ from matplotlib.collections import LineCollection
 from .config import DEFAULT_CONFIG
 from .physics import speed_profile
 
+TRAIN = "\U0001f686"
+
 
 def create_race_animation(road_rgba, paths_raw, paths_timed, dist_map,
                           n_frames, cfg=None, output_path=None):
@@ -25,6 +27,7 @@ def create_race_animation(road_rgba, paths_raw, paths_timed, dist_map,
         ix = np.clip(raw[:, 0].astype(int), 0, w - 1)
         v = speed_profile(raw, dist_map[iy, ix], cfg)
         vnorm = v / v.max()
+        # TODO could probably skip building segs every time if we cache these
         segs = np.column_stack([raw[:-1], raw[1:]]).reshape(-1, 2, 2)
         ax.add_collection(
             LineCollection(segs, array=vnorm[:-1], cmap=cmap, linewidth=3, zorder=1)
@@ -32,11 +35,12 @@ def create_race_animation(road_rgba, paths_raw, paths_timed, dist_map,
 
     markers = {}
     for n, pts in paths_timed.items():
-        markers[n], = ax.plot(pts[0][0], pts[0][1], "o", markersize=12, zorder=3)
+        markers[n] = ax.text(pts[0][0], pts[0][1], TRAIN, fontsize=28,
+                             ha="center", va="center", zorder=3)
 
     def update(i):
         for n in markers:
-            markers[n].set_data([paths_timed[n][i][0]], [paths_timed[n][i][1]])
+            markers[n].set_position(paths_timed[n][i])
         return markers.values()
 
     # blit=True makes a huge difference was like 5fps without it
