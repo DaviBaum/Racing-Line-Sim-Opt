@@ -10,15 +10,21 @@ from .optimal_path import FMMSolver
 from .animation import create_race_animation
 
 
+def load_road(road_path):
+    road_rgba = np.asarray(Image.open(road_path).convert("RGBA"))
+    # alpha 0 = road everything else is wall
+    driveable = road_rgba[..., 3] == 0
+    # how far each pixel is from a wall used for speed penalties
+    dist = distance_transform_edt(driveable).astype(float)
+    return road_rgba, driveable, dist
+
+
 def run_race(road_path, stroke_paths, cfg=None, compute_optimal=True,
              output_path=None, show=True):
     if cfg is None:
         cfg = DEFAULT_CONFIG
 
-    road_rgba = np.asarray(Image.open(road_path).convert("RGBA"))
-    driveable = road_rgba[..., 3] == 0
-    # how far each pixel is from a wall
-    dist = distance_transform_edt(driveable).astype(float)
+    road_rgba, driveable, dist = load_road(road_path)
 
     paths_raw = {}
     for name, png in stroke_paths.items():
