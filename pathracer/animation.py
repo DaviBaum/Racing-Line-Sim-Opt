@@ -39,8 +39,9 @@ def create_race_animation(road_rgba, paths_raw, paths_timed, dist_map,
             markers[n].set_data([paths_timed[n][i][0]], [paths_timed[n][i][1]])
         return markers.values()
 
+    # blit=True makes a huge difference was like 5fps without it
     result = anim.FuncAnimation(fig, update, frames=n_frames,
-                                interval=cfg.dt * 1000)
+                                interval=cfg.dt * 1000, blit=True)
     if output_path:
         print(f"Saving to {output_path}...")
         result.save(output_path, fps=cfg.fps, dpi=150)
