@@ -9,6 +9,15 @@ from pathracer import run_race, SimConfig
 def main():
     parser = argparse.ArgumentParser(
         description="PathRacer: Physics-based path racing simulator",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""\
+Example:
+  python cli.py --road examples/inputs/road_map.png \\
+                --paths yellow=examples/inputs/path_yellow.png \\
+                        green=examples/inputs/path_green.png \\
+                        pink=examples/inputs/path_pink.png \\
+                --output race.mp4
+        """,
     )
     parser.add_argument(
         "--road", required=True,
@@ -30,10 +39,13 @@ def main():
 
     args = parser.parse_args()
 
+    # Parse name=file pairs
     stroke_paths = {}
     for item in args.paths:
-        parts = item.split("=")
-        name, path = parts[0], parts[1]
+        if "=" not in item:
+            print(f"Error: --paths expects NAME=FILE format, got: {item}", file=sys.stderr)
+            sys.exit(1)
+        name, path = item.split("=", 1)
         stroke_paths[name] = path
 
     cfg = SimConfig()
