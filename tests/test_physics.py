@@ -1,5 +1,5 @@
 import numpy as np
-from pathracer.physics import curvature, speed_profile
+from pathracer.physics import curvature, speed_profile, resample_time
 from pathracer.config import SimConfig
 
 
@@ -32,3 +32,12 @@ def test_speed_profile_wall_slowdown():
     v_far = speed_profile(xy, np.full(200, 100.0), cfg)
     v_near = speed_profile(xy, np.full(200, 1.0), cfg)
     assert v_far.mean() > v_near.mean()
+
+
+def test_resample_time_output_shape():
+    xy = np.column_stack([np.linspace(0, 100, 200), np.zeros(200)])
+    v = np.full(200, 1.0)
+    dt = 0.025
+    resampled, total_time = resample_time(xy, v, dt)
+    expected = int(total_time / dt) + 1
+    assert abs(len(resampled) - expected) <= 1
