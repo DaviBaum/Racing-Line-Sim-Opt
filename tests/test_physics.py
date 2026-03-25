@@ -1,5 +1,6 @@
 import numpy as np
-from pathracer.physics import curvature
+from pathracer.physics import curvature, speed_profile
+from pathracer.config import SimConfig
 
 
 def test_curvature_straight_line():
@@ -15,3 +16,19 @@ def test_curvature_circle():
     k = curvature(xy)
     # skip edges bc finite diffs are wonky there
     assert np.allclose(k[10:-10], 1.0 / R, atol=0.01)
+
+
+def test_speed_profile_respects_limits():
+    cfg = SimConfig(v_base=1.0)
+    xy = np.column_stack([np.linspace(0, 200, 300), np.zeros(300)])
+    dist = np.full(300, 50.0)
+    v = speed_profile(xy, dist, cfg)
+    assert v.max() <= cfg.v_base + 0.01
+
+
+def test_speed_profile_wall_slowdown():
+    cfg = SimConfig()
+    xy = np.column_stack([np.linspace(0, 100, 200), np.zeros(200)])
+    v_far = speed_profile(xy, np.full(200, 100.0), cfg)
+    v_near = speed_profile(xy, np.full(200, 1.0), cfg)
+    assert v_far.mean() > v_near.mean()
