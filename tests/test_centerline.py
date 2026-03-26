@@ -47,7 +47,7 @@ def test_empty_image_raises():
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
         Image.new("RGBA", (100, 100), (0, 0, 0, 0)).save(f.name)
         try:
-            with pytest.raises(ValueError):
+            with pytest.raises(ValueError, match="No painted pixels"):
                 ordered_centerline(f.name)
         finally:
             os.unlink(f.name)
