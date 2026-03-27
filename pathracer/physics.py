@@ -69,3 +69,25 @@ def resample_time(path_xy, v_node, dt):
     x = np.interp(t_new, t_cum, path_xy[:, 0])
     y = np.interp(t_new, t_cum, path_xy[:, 1])
     return np.column_stack([x, y]), t_cum[-1]
+
+
+def compute_stats(path_xy, dist_from_wall, cfg=None):
+    # just grabs the peak values for the summary printout
+    if cfg is None:
+        cfg = DEFAULT_CONFIG
+
+    v = speed_profile(path_xy, dist_from_wall, cfg)
+    ds = np.hypot(np.diff(path_xy[:, 0]), np.diff(path_xy[:, 1])) + cfg.eps
+    v_avg = 0.5 * (v[:-1] + v[1:])
+    dt_seg = ds / v_avg
+
+    a = np.diff(v) / dt_seg
+    jerk = np.diff(a) / dt_seg[1:] if len(a) > 1 else np.array([])
+    lat_g = v_avg**2 * np.abs(curvature(path_xy)[:-1]) / 9.81
+
+    return {
+        "v_max": float(v.max()),
+        "a_max": float(np.abs(a).max()) if len(a) else 0.0,
+        "j_max": float(np.abs(jerk).max()) if len(jerk) else 0.0,
+        "g_lat_max": float(lat_g.max()) if len(lat_g) else 0.0,
+    }
