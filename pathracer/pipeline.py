@@ -54,6 +54,12 @@ def run_race(road_path, stroke_paths, cfg=None, compute_optimal=True,
 
     n_frames = int(max(total_times.values()) / cfg.dt) + 1
 
+    # pad shorter paths so they just sit at the end while others finish
+    for name in list(paths_timed):
+        p = paths_timed[name]
+        if len(p) < n_frames:
+            paths_timed[name] = np.vstack([p, np.tile(p[-1:], (n_frames - len(p), 1))])
+
     print("\nPhysics summary (peak values):")
     for n, s in stats.items():
         print(f"  {n}: v={s['v_max']:.2f}  a={s['a_max']:.2f}  "
