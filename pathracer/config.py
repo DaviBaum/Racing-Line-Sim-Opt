@@ -18,5 +18,9 @@ class SimConfig:
     smooth_poly: int = 3
     eps: float = 1e-6
 
+    @property
+    def dt(self):
+        return 1.0 / self.fps
+
 
 DEFAULT_CONFIG = SimConfig()
