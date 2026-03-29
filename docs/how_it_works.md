@@ -6,7 +6,7 @@ This covers the math and algorithms behind each stage of the pipeline. If you ju
 
 The input is a thick, hand-drawn stroke painted onto a transparent PNG. The goal is to turn that into a clean, ordered list of (x, y) coordinates that represent the path.
 
-First, I threshold the alpha channel to get a binary mask of the stroke. If there happen to be stray pixels or disconnected blobs, only the largest connected component is kept. Then morphological skeletonization thins the mask down to a 1-pixel-wide spine --- it works by repeatedly peeling away boundary pixels until only the skeleton remains.
+First, I threshold the alpha channel to get a binary mask of the stroke. If there happen to be stray pixels or disconnected blobs, only the largest connected component is kept. Then morphological skeletonization thins the mask down to a 1-pixel-wide spine — it works by repeatedly peeling away boundary pixels until only the skeleton remains.
 
 To figure out the direction of the path, I look for degree-1 pixels on the skeleton (pixels with exactly one neighbor). Those are the endpoints. I pick the two that are farthest apart using `cdist`, then use `route_through_array` to trace through the skeleton between them and get a properly ordered sequence of coordinates.
 
@@ -14,7 +14,7 @@ The raw skeleton coordinates are pretty jagged at this point, so I run a Savitzk
 
 ## Optimal path with FMM
 
-This is probably the most interesting part. The Fast Marching Method finds the globally optimal path through the track --- not just a locally smooth one, but the actual shortest possible route.
+This is probably the most interesting part. The Fast Marching Method finds the globally optimal path through the track — not just a locally smooth one, but the actual shortest possible route.
 
 I start by upsampling the driveable mask 8x in each dimension. This gives the FMM sub-pixel resolution to work with, which matters a lot for tight corners. From the upsampled mask, I build a signed distance function (negative inside the road, positive outside) and feed it into scikit-fmm's `travel_time`. That solves the Eikonal equation and gives back a scalar field where every pixel holds the shortest travel time from the start point.
 
@@ -36,7 +36,7 @@ Given a path through the track, this part figures out how fast you can go at eve
 
 **Wall + curvature limit.** The base formula is `v = v_base / (1 + wall_penalty/dist + curv_penalty * kappa^2)`. Being closer to a wall makes you slower, and tighter curves make you slower. This is the main thing that creates time differences between paths.
 
-**Lateral acceleration limit.** On curves, speed is also capped by `v = sqrt(a_lat_max / kappa)`. This comes from the centripetal acceleration equation --- `v^2 * kappa` can't exceed `a_lat_max`, otherwise you'd be pulling unrealistic lateral g-forces through tight turns.
+**Lateral acceleration limit.** On curves, speed is also capped by `v = sqrt(a_lat_max / kappa)`. This comes from the centripetal acceleration equation — `v^2 * kappa` can't exceed `a_lat_max`, otherwise you'd be pulling unrealistic lateral g-forces through tight turns.
 
 **Forward/backward acceleration sweep.** Even if a long straight theoretically allows high speed, you can't instantly jump to that speed. The forward pass enforces `v[i] <= v[i-1] + a_max * ds / v[i-1]`, which is basically `v^2 = v0^2 + 2*a*ds` rearranged. Then a backward pass does the same thing in reverse so you actually slow down in time before corners instead of braking at the last pixel.
 
