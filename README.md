@@ -18,6 +18,51 @@ pip install -r requirements.txt
 
 You'll need FFmpeg for MP4 export. On Mac that's `brew install ffmpeg`, on Linux `apt install ffmpeg`.
 
+## Running a race
+
+From the command line:
+
+```bash
+python cli.py \
+    --road examples/inputs/road_map.png \
+    --paths yellow=examples/inputs/path_yellow.png \
+            green=examples/inputs/path_green.png \
+            pink=examples/inputs/path_pink.png \
+    --output race.mp4
+```
+
+Or from Python:
+
+```python
+from pathracer import run_race
+
+result = run_race(
+    road_path="examples/inputs/road_map.png",
+    stroke_paths={
+        "yellow": "examples/inputs/path_yellow.png",
+        "green": "examples/inputs/path_green.png",
+        "pink": "examples/inputs/path_pink.png",
+    },
+    output_path="race.mp4",
+)
+
+for name, time in sorted(result["total_times"].items(), key=lambda x: x[1]):
+    print(f"{name}: {time:.2f}s")
+```
+
+## Configuring the physics
+
+All the physics parameters live in `SimConfig` in config.py. The defaults are tuned for typical track images but you can override anything:
+
+```python
+from pathracer import SimConfig, run_race
+
+cfg = SimConfig(v_base=150.0, wall_penalty=5.0, a_max=400.0)
+result = run_race("track.png", {"fast": "path.png"}, cfg=cfg)
+```
+
+The ones you'd most likely want to tweak are `v_base` (top speed on open road), `wall_penalty` (how much being near a wall slows you down), and `a_max` / `a_lat_max` (longitudinal and lateral acceleration caps). The `j_window` parameter controls how aggressively the jerk filter smooths out the speed profile.
+
 ## Track format
 
 Track PNGs use the alpha channel: transparent pixels are driveable road, opaque pixels are walls. That's the only requirement.
