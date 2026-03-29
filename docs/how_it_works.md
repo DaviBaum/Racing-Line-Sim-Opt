@@ -29,3 +29,25 @@ next = p - h/6 * (k1 + 2*k2 + 2*k3 + k4)
 ```
 
 The path that comes out of FMM is globally optimal but a bit noisy, so there's one more cleanup step: elastic-band relaxation. I resample the path to 128 evenly spaced "beads" and then iteratively nudge each bead toward the midpoint of its two neighbors. That shortens the path and smooths it out. After each nudge, any bead that ended up outside the driveable region gets projected back onto the nearest road pixel.
+
+## Speed profiling
+
+Given a path through the track, this part figures out how fast you can go at every point. There are four constraints, applied in order:
+
+**Wall + curvature limit.** The base formula is `v = v_base / (1 + wall_penalty/dist + curv_penalty * kappa^2)`. Being closer to a wall makes you slower, and tighter curves make you slower. This is the main thing that creates time differences between paths.
+
+**Lateral acceleration limit.** On curves, speed is also capped by `v = sqrt(a_lat_max / kappa)`. This comes from the centripetal acceleration equation --- `v^2 * kappa` can't exceed `a_lat_max`, otherwise you'd be pulling unrealistic lateral g-forces through tight turns.
+
+**Forward/backward acceleration sweep.** Even if a long straight theoretically allows high speed, you can't instantly jump to that speed. The forward pass enforces `v[i] <= v[i-1] + a_max * ds / v[i-1]`, which is basically `v^2 = v0^2 + 2*a*ds` rearranged. Then a backward pass does the same thing in reverse so you actually slow down in time before corners instead of braking at the last pixel.
+
+**Jerk smoothing.** After all of that, the speed profile still has some sharp discontinuities where different limits take over. A Savitzky-Golay filter (window 11) smooths those transitions out, and then the result is clamped back down to the original limits so smoothing doesn't accidentally push speeds above what's allowed.
+
+## Time resampling
+
+The speed profile gives speed at each spatial sample along the path, but for the animation I need positions at uniform time intervals. So I compute the time to cross each segment as `dt = ds / v_avg`, build up a cumulative time array, and then interpolate x and y onto a new grid spaced at 1/fps intervals.
+
+## Animation
+
+Each path is rendered as a `LineCollection` colored by normalized speed using the turbo colormap. Train emoji markers sit at the current timestep position for each racer. Paths that finish early just hold at their final position until everyone else is done.
+
+I use `blit=True` on the `FuncAnimation`, which makes a big difference for rendering speed. Without it the frame rate was noticeably worse.
