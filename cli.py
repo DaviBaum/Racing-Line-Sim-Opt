@@ -36,6 +36,8 @@ Example:
         "--no-optimal", action="store_true",
         help="Skip computing the FMM optimal (cyan) path",
     )
+    parser.add_argument("--fps", type=int, default=40, help="Frames per second")
+    parser.add_argument("--no-show", action="store_true", help="Don't display the animation window")
 
     args = parser.parse_args()
 
@@ -48,7 +50,7 @@ Example:
         name, path = item.split("=", 1)
         stroke_paths[name] = path
 
-    cfg = SimConfig()
+    cfg = SimConfig(fps=args.fps)
 
     run_race(
         road_path=args.road,
@@ -56,6 +58,7 @@ Example:
         cfg=cfg,
         compute_optimal=not args.no_optimal,
         output_path=args.output,
+        show=not args.no_show,
     )
 
 
