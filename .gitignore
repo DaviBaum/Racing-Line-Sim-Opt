@@ -7,3 +7,7 @@ build/
 .eggs/
 venv/
 .venv/
+*.mp4
+.ipynb_checkpoints/
+.DS_Store
+*.profraw
