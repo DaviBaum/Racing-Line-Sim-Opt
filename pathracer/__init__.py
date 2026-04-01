@@ -1,6 +1,6 @@
 """PathRacer - Physics-based path racing simulator."""
 
-__version__ = "0.1.0"
+__version__ = "0.9.0"
 
 from .config import SimConfig, DEFAULT_CONFIG
 from .centerline import ordered_centerline
