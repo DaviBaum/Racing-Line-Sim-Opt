@@ -1,5 +1,7 @@
 # PathRacer
 
+> **Note:** If you've found your way here from my resume — whether you're considering me for a role or preparing for an interview — welcome! This entire project was built from scratch by me. All of the algorithm design, physics modeling, and implementation are my own original work. This documentation was written by me and then reworded with the help of AI and Grammarly for clarity and phrasing. I fully understand everything here and can explain any part of it on the spot if needed. Apologies in advance for the informal commenting and annotations throughout the code — that's just how I write when I'm in the zone.
+
 Draw paths on a track, race them with real physics, and compare against the mathematically optimal route.
 
 ## What it does
@@ -68,6 +70,15 @@ The ones you'd most likely want to tweak are `v_base` (top speed on open road), 
 Track PNGs use the alpha channel: transparent pixels are driveable road, opaque pixels are walls. That's the only requirement.
 
 Path PNGs are colored strokes on a transparent background. The actual stroke color doesn't matter for the physics, it just determines the display color in the animation.
+
+## How the pipeline works
+
+There's a more detailed writeup in [docs/how_it_works.md](docs/how_it_works.md), but at a high level:
+
+1. **Centerline extraction** — Skeletonize each hand-drawn stroke to a 1px spine, find the two farthest endpoints, trace between them, and smooth with a Savitzky-Golay filter.
+2. **Optimal path (FMM)** — Upsample the driveable mask 8x, run Fast Marching to get a travel-time field, trace back through the gradient with RK4, then clean it up with elastic-band relaxation.
+3. **Speed profiling** — Compute curvature everywhere, apply wall proximity and curvature speed limits, run forward/backward acceleration sweeps, and smooth the result with another Savitzky-Golay pass.
+4. **Animation** — Resample all paths to uniform timesteps and render with matplotlib. Speed is shown via a turbo colormap (blue = slow, red = fast) and train emoji markers race along each path.
 
 ## License
 

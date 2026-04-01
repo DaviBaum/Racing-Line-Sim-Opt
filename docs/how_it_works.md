@@ -1,5 +1,7 @@
 # How PathRacer works
 
+> **Note:** If you've found your way here from my resume — whether you're considering me for a role or preparing for an interview — welcome! Everything in this project was built from complete scratch by me. The algorithms, math, and all implementation are my own. This writeup was written by me and then reworded with the help of AI and Grammarly for clarity and phrasing. That said, I assure you I fully understand everything here and can explain any part of it on the spot if needed. Apologies in advance for the informal commenting and annotations throughout the code — that's just how I write when I'm in the zone.
+
 This covers the math and algorithms behind each stage of the pipeline. If you just want to run it, check the README instead.
 
 ## Centerline extraction
