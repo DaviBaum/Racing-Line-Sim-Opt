@@ -4,6 +4,8 @@
 
 Draw paths on a track, race them with real physics, and compare against the mathematically optimal route.
 
+![Race Demo](docs/screenshots/race_demo.gif)
+
 ## What it does
 
 You give it a track image and some hand-drawn paths as PNGs. It extracts the centerline from each stroke, runs physics on them (wall penalties, curvature-based speed limits, acceleration caps, jerk smoothing), and then animates the whole thing as a race. Paths get colored by speed so you can see where you're fast and where you're slow.
@@ -83,3 +85,5 @@ There's a more detailed writeup in [docs/how_it_works.md](docs/how_it_works.md),
 ## License
 
 MIT
+
+---
