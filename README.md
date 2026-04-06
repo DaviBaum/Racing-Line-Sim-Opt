@@ -82,6 +82,24 @@ There's a more detailed writeup in [docs/how_it_works.md](docs/how_it_works.md),
 3. **Speed profiling** — Compute curvature everywhere, apply wall proximity and curvature speed limits, run forward/backward acceleration sweeps, and smooth the result with another Savitzky-Golay pass.
 4. **Animation** — Resample all paths to uniform timesteps and render with matplotlib. Speed is shown via a turbo colormap (blue = slow, red = fast) and train emoji markers race along each path.
 
+## Project structure
+
+```
+pathracer/
+├── pathracer/
+│   ├── centerline.py       # stroke to centerline extraction
+│   ├── optimal_path.py     # FMM optimal path solver
+│   ├── physics.py          # speed profiling and curvature
+│   ├── animation.py        # matplotlib race animation
+│   ├── pipeline.py         # ties everything together
+│   └── config.py           # tunable simulation parameters
+├── cli.py
+├── tests/
+├── examples/inputs/
+├── docs/
+└── requirements.txt
+```
+
 ## License
 
 MIT
