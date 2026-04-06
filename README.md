@@ -100,6 +100,18 @@ pathracer/
 └── requirements.txt
 ```
 
+## Sample output
+
+```
+Physics summary (peak values):
+  yellow    v=105.2  a=298.1  j=842.3  lat_g=0.38
+  green     v=112.7  a=299.4  j=791.5  lat_g=0.35
+  pink      v=98.6   a=297.8  j=901.2  lat_g=0.42
+  cyan      v=118.3  a=299.1  j=685.4  lat_g=0.29
+```
+
+Cyan is the FMM optimal path. It pretty much always wins unless you happen to draw the perfect line yourself.
+
 ## License
 
 MIT
